@@ -139,7 +139,6 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="fuzzy_logic.h" />
     <ClCompile Include="lois.cpp" />
   </ItemGroup>
   <ItemGroup>
