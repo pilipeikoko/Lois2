@@ -1,0 +1,5 @@
+#include "resource.h"
+
+DEMO_TEXT SETTINGS "Res\\settings.txt"
+DEMO_TEXT1 TEXTFILE1 "Res\\fuzzy_sets.txt"
+DEMO_TEXT2 TEXTFILE2 "Res\\reverse_sets.txt"
