@@ -75,9 +75,12 @@ vector<string> parse_strings_from_file(int demo_text, int text_file) {
 
 
 bool should_pick_next() {
-	cout << "Please enter any value to continue:\n";
+	cout << "Please enter 'exit' to exit or any value to continue:\n";
 	string s;
 	cin >> s;
+	if (s == "") {
+		return false;
+	}
 	system("cls");
 	return true;
 }
@@ -116,9 +119,9 @@ void reverse_output() {
 		}
 
 		// вычисление интервалов для каждого уравнения системы
-		vector<vector<pair<string, float>>> solutions = compute_reverse_composition(set.second, matrix);
+		vector<vector<vector<pair<float, float>>>> solutions = compute_reverse_composition(set.second, matrix);
 		// вычисление общего решения
-		vector<pair<float, float>> actual_solution = compute_actual_solution(solutions);
+		vector<vector<pair<float, float>>> actual_solution = compute_actual_solution(solutions);
 
 		print_solutions(set, selected_index, actual_solution);
 

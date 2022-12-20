@@ -169,114 +169,135 @@ inline void show_reverse_input(input_data data, int choosen) {
 	show_impl_matrix(data[choosen].second, to_string(choosen));
 }
 
-vector<vector<pair<string, float>>> compute_reverse_composition(arr array, impl_matrix matrix) {
-	vector<vector<pair<string, float>>> solutions;
-	for (size_t i = 0; i < matrix.size(); i++)
+vector<vector<vector<pair<float, float>>>> compute_reverse_composition(arr array, impl_matrix matrix) {
+	vector<vector<vector<pair<float, float>>>> solutions;
+
+	for (size_t j = 0; j < matrix[0].size(); j++)
 	{
-		vector<pair<string, float>> solution;
-		for (size_t j = 0; j < matrix[0].size(); j++)
+		vector<vector<pair<float, float>>> solution_for_variable;
+		for (size_t k = 0; k < matrix.size(); k++)
 		{
-			float a = -1;
-			string sign;
-			if (array[j].second == matrix[i][j].second)
-			{
-				a = matrix[i][j].second;
-				sign = "more";
+			vector<pair<float, float>> solution;
+
+			bool j_column_has_solution = matrix[k][j].second >= array[j].second;
+			if (!j_column_has_solution) {
+				continue;
 			}
-			else if (array[j].second < matrix[i][j].second)
-			{
-				a = array[j].second;
-				sign = "equals";
+			float lower = 0;
+			float higher = 0;
+
+			if (matrix[k][j].second == array[j].second) {
+				lower = array[j].second;
+				higher = 1;
 			}
-			solution.push_back({ sign, a });
+			else if (matrix[k][j].second > array[j].second) {
+				lower = array[j].second;
+				higher = array[j].second;
+			}
+
+			for (int t = 0; t < matrix.size(); t++) {
+				if (t == k) {
+					solution.push_back({ lower, higher });
+				}
+				else {
+					float min = matrix[t][j].second >= array[j].second ? array[j].second : 1;
+					solution.push_back({ 0 , min });
+				}
+			}
+			solution_for_variable.push_back(solution);
 		}
-		solutions.push_back(solution);
+
+		solutions.push_back(solution_for_variable);
 	}
+
 	return solutions;
 }
 
-vector<pair<float, float>> compute_actual_solution(vector<vector<pair<string, float>>> solutions) {
-	vector<pair<float, float>> actual_sltn;
-	for (size_t i = 0; i < solutions.size(); i++)
-	{
-		float current_more = 0;
-		float current_less = 1;
-		for (size_t j = 0; j < solutions[0].size(); j++)
-		{
-			float current_a = solutions[i][j].second;
-			string sign = solutions[i][j].first;
-			if (sign == "more")
-			{
-				if (current_a > current_more)
-				{
-					current_more = current_a;
+vector<vector<pair<float, float>>> compute_actual_solution(vector<vector<vector<pair<float, float>>>> solutions) {
+	vector<vector<pair<float, float>>> actual_sltn;
+
+	for (int j = 0; j < solutions[0].size(); j++) {
+		for (int k = 0; k < solutions[0].size(); k++) {
+			vector<pair<float, float>> solution_for_column;
+			for (int t = 0; t < solutions[j][k].size(); t++) {
+				// J K T are intervals that are being checked
+				float lower = solutions[j][k][t].first;
+				float higher = solutions[j][k][t].second;
+				int solution_counter = 0;
+				for (int i = 1; i < solutions.size(); ++i) {
+					for (int s = 0; s < solutions[i].size(); ++s) {
+						float lower_to_be_compared = solutions[i][s][t].first;
+						float higher_to_be_compared = solutions[i][s][t].second;
+
+						if (lower_to_be_compared >= higher || lower <= higher_to_be_compared) {
+							if (lower < lower_to_be_compared) {
+								lower = lower_to_be_compared;
+							}
+
+							if (higher > higher_to_be_compared) {
+								higher = higher_to_be_compared;
+							}
+
+							solution_counter++;
+							break;
+						}
+					}
+				}
+				if (solution_counter == solutions.size() - 1) {
+					solution_for_column.push_back({ lower,higher });
 				}
 			}
-			else if (sign == "equals")
-			{
-				bool is_only_solution = true;
-				for (size_t k = 0; k < i; k++)
-				{
-					if (solutions[k][j].first == "more")
-					{
-						is_only_solution = false;
-					}
-				}
-				if (is_only_solution)
-				{
-					current_less = current_a;
-					current_more = current_a;
-				}
-				else if (current_a < current_less)
-				{
-					current_less = current_a;
-					if (current_more > current_less)
-					{
-						current_more = 0;
-					}
-				}
+			if (solution_for_column.size() == solutions[j][k].size()) {
+				actual_sltn.push_back(solution_for_column);
 			}
 		}
-		actual_sltn.push_back({ current_more, current_less });
+		break;
 	}
+
 	return actual_sltn;
 }
 
-void print_solutions(set i_set, int m_count, vector<pair<float, float>> solution) {
+void print_solutions(set i_set, int m_count, vector<vector<pair<float, float>>> merged_solutions) {
 	int i = 0;
 	cout << "Solution:";
 	cout << "(";
-	while (i < solution.size())
+	while (i < merged_solutions[0].size())
 	{
 		cout << i_set.first << m_count << "(x" << i + 1 << ")";
-		if (i + 1 != solution.size())
+		if (i + 1 != merged_solutions[0].size())
 		{
 			cout << ",";
 		}
 		i++;
 	}
 	cout << ")E";
-
-	cout << "(";
-	for (size_t j = 0; j < solution.size(); j++)
+	for (size_t i = 0; i < merged_solutions.size(); i++)
 	{
-		cout << "[";
-		if (solution[j].first == solution[j].second)
+		cout << "(";
+		for (size_t j = 0; j < merged_solutions[i].size(); j++)
 		{
-			cout << solution[j].first;
+			cout << "[";
+			if (merged_solutions[i][j].first == merged_solutions[i][j].second)
+			{
+				cout << merged_solutions[i][j].first;
+			}
+			else
+			{
+				cout << merged_solutions[i][j].first << "," << merged_solutions[i][j].second;
+			}
+			cout << "]";
+			if (j + 1 != merged_solutions[i].size())
+			{
+				cout << "x";
+			}
 		}
-		else
+		cout << ")";
+		if (i + 1 != merged_solutions.size())
 		{
-			cout << solution[j].first << "," << solution[j].second;
-		}
-		cout << "]";
-		if (j + 1 != solution.size())
-		{
-			cout << "x";
+			cout << "U";
 		}
 	}
-	cout << ")" << endl;
-
+	cout << "\n";
 }
 
 void print_no_solution(set i_set, int m_count) {
